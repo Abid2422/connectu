@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  nyuEmail      String   @unique
+  emailVerified Boolean  @default(false)
+  name          String?
+  major         String?
+  year          String?
+  bio           String?
+  interests     String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
+
+// Tracks OTPs separately from User so old codes can be invalidated on
+// resend and expiry can be enforced without mutating the user record.
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otpCode   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("otps")
+}
