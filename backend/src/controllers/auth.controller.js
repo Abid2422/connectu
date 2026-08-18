@@ -11,11 +11,20 @@ async function signup(req, res, next) {
   }
 }
 
-// POST /api/auth/verify-otp — complete signup: check OTP, mark verified.
+// POST /api/auth/verify-otp — complete signup: check OTP, mark verified,
+// issue a session cookie immediately (no separate login step).
 async function verifyOtp(req, res, next) {
   try {
     const { nyuEmail, otpCode } = req.body;
-    const user = await authService.confirmSignup(nyuEmail, otpCode);
+    const { user, token } = await authService.confirmSignup(nyuEmail, otpCode);
+
+    res.cookie(authService.SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: authService.SESSION_TTL_SECONDS * 1000,
+    });
+
     res.status(200).json({ user });
   } catch (err) {
     next(err);
