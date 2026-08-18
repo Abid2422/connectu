@@ -1,9 +1,9 @@
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
-const authRoutes = require('./routes/auth.routes');
-const { notFoundHandler, errorHandler } = require('./middleware/error.middleware');
+import authRoutes from './routes/auth.routes';
+import { notFoundHandler, errorHandler } from './middleware/error.middleware';
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
@@ -25,4 +25,4 @@ app.use('/api/auth', authRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

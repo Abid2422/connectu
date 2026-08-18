@@ -1,11 +1,11 @@
-require('dotenv').config();
+import 'dotenv/config';
 
-const app = require('./app');
-const redisClient = require('./config/redis');
+import app from './app';
+import redisClient from './config/redis';
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 
-async function start() {
+async function start(): Promise<void> {
   await redisClient.connect();
 
   app.listen(PORT, () => {

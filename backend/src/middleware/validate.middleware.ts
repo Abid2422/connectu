@@ -1,16 +1,17 @@
-const { isNyuEmail } = require('../utils/nyuEmailValidator');
+import type { RequestHandler } from 'express';
+import { isNyuEmail } from '../utils/nyuEmailValidator';
 
-function validateSignupRequest(req, res, next) {
+export const validateSignupRequest: RequestHandler = (req, res, next) => {
   const { nyuEmail } = req.body || {};
 
   if (!nyuEmail || !isNyuEmail(nyuEmail)) {
     return res.status(400).json({ error: 'A valid @nyu.edu email is required.' });
   }
 
-  next();
-}
+  return next();
+};
 
-function validateOtpVerifyRequest(req, res, next) {
+export const validateOtpVerifyRequest: RequestHandler = (req, res, next) => {
   const { nyuEmail, otpCode } = req.body || {};
 
   if (!nyuEmail || !isNyuEmail(nyuEmail)) {
@@ -21,7 +22,5 @@ function validateOtpVerifyRequest(req, res, next) {
     return res.status(400).json({ error: 'An OTP code is required.' });
   }
 
-  next();
-}
-
-module.exports = { validateSignupRequest, validateOtpVerifyRequest };
+  return next();
+};

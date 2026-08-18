@@ -1,6 +1,7 @@
-const crypto = require('crypto');
-const prisma = require('../config/db');
-const redisClient = require('../config/redis');
+import crypto from 'crypto';
+import prisma from '../config/db';
+import redisClient from '../config/redis';
+import { HttpError } from '../utils/httpError';
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_MINUTES = 10;
@@ -8,16 +9,16 @@ const RESEND_COOLDOWN_SECONDS = 60;
 const RESEND_HOURLY_LIMIT = 5;
 const RESEND_HOURLY_WINDOW_SECONDS = 60 * 60;
 
-function generateNumericOtp() {
+function generateNumericOtp(): string {
   const otp = crypto.randomInt(0, 10 ** OTP_LENGTH);
   return otp.toString().padStart(OTP_LENGTH, '0');
 }
 
-function hashOtp(otpCode) {
+function hashOtp(otpCode: string): string {
   return crypto.createHash('sha256').update(otpCode).digest('hex');
 }
 
-function hashesMatch(candidateHash, storedHash) {
+function hashesMatch(candidateHash: string, storedHash: string): boolean {
   const candidateBuf = Buffer.from(candidateHash, 'hex');
   const storedBuf = Buffer.from(storedHash, 'hex');
 
@@ -27,7 +28,7 @@ function hashesMatch(candidateHash, storedHash) {
 
 // Applies to any OTP issuance (initial signup or resend) so the limits
 // can't be bypassed by hitting /signup repeatedly instead of /resend-otp.
-async function enforceIssueRateLimit(email) {
+async function enforceIssueRateLimit(email: string): Promise<void> {
   const cooldownKey = `otp:cooldown:${email}`;
   const hourlyKey = `otp:hourly:${email}`;
 
@@ -38,9 +39,7 @@ async function enforceIssueRateLimit(email) {
 
   if (!acquired) {
     const ttl = await redisClient.ttl(cooldownKey);
-    const err = new Error(`Please wait ${Math.max(ttl, 1)}s before requesting another code.`);
-    err.status = 429;
-    throw err;
+    throw new HttpError(429, `Please wait ${Math.max(ttl, 1)}s before requesting another code.`);
   }
 
   const count = await redisClient.incr(hourlyKey);
@@ -49,13 +48,11 @@ async function enforceIssueRateLimit(email) {
   }
 
   if (count > RESEND_HOURLY_LIMIT) {
-    const err = new Error('Too many code requests for this email. Please try again later.');
-    err.status = 429;
-    throw err;
+    throw new HttpError(429, 'Too many code requests for this email. Please try again later.');
   }
 }
 
-async function generateOtp(email) {
+export async function generateOtp(email: string): Promise<string> {
   await enforceIssueRateLimit(email);
 
   const otpCode = generateNumericOtp();
@@ -70,32 +67,24 @@ async function generateOtp(email) {
   return otpCode;
 }
 
-async function verifyOtp(email, otpCode) {
+export async function verifyOtp(email: string, otpCode: string): Promise<void> {
   const record = await prisma.otp.findFirst({
     where: { email },
     orderBy: { createdAt: 'desc' },
   });
 
   if (!record) {
-    const err = new Error('No verification code found for this email. Request a new one.');
-    err.status = 400;
-    throw err;
+    throw new HttpError(400, 'No verification code found for this email. Request a new one.');
   }
 
   if (record.expiresAt < new Date()) {
     await prisma.otp.delete({ where: { id: record.id } });
-    const err = new Error('Verification code has expired. Request a new one.');
-    err.status = 400;
-    throw err;
+    throw new HttpError(400, 'Verification code has expired. Request a new one.');
   }
 
   if (!hashesMatch(hashOtp(otpCode), record.otpHash)) {
-    const err = new Error('Invalid verification code.');
-    err.status = 400;
-    throw err;
+    throw new HttpError(400, 'Invalid verification code.');
   }
 
   await prisma.otp.delete({ where: { id: record.id } });
 }
-
-module.exports = { generateOtp, verifyOtp };

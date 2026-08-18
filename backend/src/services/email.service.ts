@@ -1,16 +1,17 @@
-const { Resend } = require('resend');
+import { Resend } from 'resend';
+import { HttpError } from '../utils/httpError';
 
 const FROM_ADDRESS = process.env.EMAIL_FROM || 'ConnectU <onboarding@resend.dev>';
 
-let resend;
-function getResendClient() {
+let resend: Resend | undefined;
+function getResendClient(): Resend {
   if (!resend) {
     resend = new Resend(process.env.RESEND_API_KEY);
   }
   return resend;
 }
 
-async function sendOtpEmail(email, otpCode) {
+export async function sendOtpEmail(email: string, otpCode: string): Promise<void> {
   const { error } = await getResendClient().emails.send({
     from: FROM_ADDRESS,
     to: email,
@@ -21,10 +22,6 @@ async function sendOtpEmail(email, otpCode) {
 
   if (error) {
     console.error('Resend send error:', error);
-    const err = new Error('Failed to send verification email.');
-    err.status = 502;
-    throw err;
+    throw new HttpError(502, 'Failed to send verification email.');
   }
 }
-
-module.exports = { sendOtpEmail };

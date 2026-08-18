@@ -1,8 +1,8 @@
-const test = require('node:test');
-const assert = require('node:assert');
-const request = require('supertest');
+import test from 'node:test';
+import assert from 'node:assert';
+import request from 'supertest';
 
-const app = require('../src/app');
+import app from '../src/app';
 
 test('POST /api/auth/signup rejects non-NYU email', async () => {
   const res = await request(app)
