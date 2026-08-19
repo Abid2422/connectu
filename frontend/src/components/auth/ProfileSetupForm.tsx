@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 // an official set to match.
 const YEAR_OPTIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate Student'];
 const CAMPUS_OPTIONS = ['Washington Square', 'Brooklyn', 'Abu Dhabi', 'Shanghai', 'Other'];
-const LOOKING_FOR_OPTIONS = ['Friends', 'Study Partner', 'Networking', 'Dating', 'Roommate'];
+const LOOKING_FOR_OPTIONS = ['Friends', 'Study Partner', 'Networking', 'Activity Partner', 'Roommate'];
 
 // Mirrors backend/src/middleware/validate.middleware.ts's constants.
 const MAX_SHORT_FIELD_LENGTH = 100;
