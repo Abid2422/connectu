@@ -1,7 +1,7 @@
 import UserAvatar from '../components/common/UserAvatar';
 import { useAuth } from '../context/AuthContext';
 
-export default function HomePage() {
+export default function DiscoveryPage() {
   const { user } = useAuth();
 
   return (
@@ -10,8 +10,10 @@ export default function HomePage() {
         {user && (
           <UserAvatar userId={user.id} name={user.name} nyuEmail={user.nyuEmail} size={56} className="mb-4" />
         )}
-        <h1 className="font-heading text-2xl font-semibold text-foreground">Welcome to ConnectU</h1>
-        <p className="mt-2 text-sm text-foreground/60">Logged in as {user?.nyuEmail}</p>
+        <h1 className="font-heading text-2xl font-semibold text-foreground">Discover</h1>
+        <p className="mt-2 text-sm text-foreground/60">
+          Discovery is coming soon. This page is a placeholder — profile setup is complete!
+        </p>
       </div>
     </main>
   );
