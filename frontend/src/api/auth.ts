@@ -9,8 +9,10 @@ export interface User {
   name: string | null;
   major: string | null;
   year: string | null;
+  campus: string | null;
   bio: string | null;
   interests: string[];
+  lookingFor: string[];
   onboardingComplete: boolean;
   createdAt: string;
   updatedAt: string;
@@ -32,6 +34,10 @@ interface MeResponse {
   user: User;
 }
 
+interface UpdateMeResponse {
+  user: User;
+}
+
 // Mirrors backend/src/middleware/validate.middleware.ts's expected body shapes.
 interface SignupRequestBody {
   nyuEmail: string;
@@ -42,9 +48,23 @@ interface VerifyOtpRequestBody {
   otpCode: string;
 }
 
-async function postJson<TResponse>(path: string, body: unknown): Promise<TResponse> {
+export interface ProfileUpdateRequestBody {
+  name?: string;
+  major: string;
+  year: string;
+  campus: string;
+  interests: string[];
+  lookingFor: string[];
+  bio: string;
+}
+
+async function sendJson<TResponse>(
+  method: 'POST' | 'PUT',
+  path: string,
+  body: unknown,
+): Promise<TResponse> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(body),
@@ -57,6 +77,10 @@ async function postJson<TResponse>(path: string, body: unknown): Promise<TRespon
   }
 
   return data as TResponse;
+}
+
+function postJson<TResponse>(path: string, body: unknown): Promise<TResponse> {
+  return sendJson<TResponse>('POST', path, body);
 }
 
 export function signup(nyuEmail: string): Promise<MessageResponse> {
@@ -95,4 +119,10 @@ export async function getMe(): Promise<User | null> {
   }
 
   return (data as MeResponse).user;
+}
+
+// PUT /api/users/me — completes/updates the logged-in user's profile.
+// A successful call always marks onboardingComplete true server-side.
+export function updateMe(body: ProfileUpdateRequestBody): Promise<User> {
+  return sendJson<UpdateMeResponse>('PUT', '/api/users/me', body).then((res) => res.user);
 }

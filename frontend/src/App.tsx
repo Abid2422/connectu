@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage';
 import VerifyPage from './pages/VerifyPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
 import HomePage from './pages/HomePage';
+import DiscoveryPage from './pages/DiscoveryPage';
 
 export default function App() {
   return (
@@ -25,6 +26,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/discovery"
+          element={
+            <ProtectedRoute>
+              <DiscoveryPage />
             </ProtectedRoute>
           }
         />
