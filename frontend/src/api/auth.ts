@@ -11,6 +11,7 @@ export interface User {
   year: string | null;
   bio: string | null;
   interests: string[];
+  onboardingComplete: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +25,10 @@ interface MessageResponse {
 }
 
 interface VerifyOtpResponse {
+  user: User;
+}
+
+interface MeResponse {
   user: User;
 }
 
@@ -67,4 +72,27 @@ export function verifyOtp(nyuEmail: string, otpCode: string): Promise<VerifyOtpR
 export function resendOtp(nyuEmail: string): Promise<MessageResponse> {
   const body: SignupRequestBody = { nyuEmail };
   return postJson<MessageResponse>('/api/auth/resend-otp', body);
+}
+
+// GET /api/users/me — resolves to the logged-in user, or null if there's no
+// valid session. A 401 is the expected "not logged in" response here, so it
+// resolves to null rather than throwing; other failures (network, 5xx) still
+// throw since those aren't a normal "logged out" state.
+export async function getMe(): Promise<User | null> {
+  const res = await fetch(`${API_BASE_URL}/api/users/me`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (res.status === 401) {
+    return null;
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error((data as ErrorResponse).error || 'Request failed');
+  }
+
+  return (data as MeResponse).user;
 }

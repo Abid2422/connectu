@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  nyuEmail      String   @unique
-  emailVerified Boolean  @default(false)
-  name          String?
-  major         String?
-  year          String?
-  bio           String?
-  interests     String[] @default([])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  nyuEmail           String   @unique
+  emailVerified      Boolean  @default(false)
+  name               String?
+  major              String?
+  year               String?
+  bio                String?
+  interests          String[] @default([])
+  onboardingComplete Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@map("users")
 }
