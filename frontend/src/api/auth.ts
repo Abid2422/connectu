@@ -13,6 +13,8 @@ export interface User {
   bio: string | null;
   interests: string[];
   lookingFor: string[];
+  avatarUrl: string | null;
+  photoUrls: string[];
   onboardingComplete: boolean;
   createdAt: string;
   updatedAt: string;
@@ -125,4 +127,50 @@ export async function getMe(): Promise<User | null> {
 // A successful call always marks onboardingComplete true server-side.
 export function updateMe(body: ProfileUpdateRequestBody): Promise<User> {
   return sendJson<UpdateMeResponse>('PUT', '/api/users/me', body).then((res) => res.user);
+}
+
+async function sendPhoto(method: 'PUT' | 'POST', path: string, file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    credentials: 'include',
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error((data as ErrorResponse).error || 'Request failed');
+  }
+
+  return (data as UpdateMeResponse).user;
+}
+
+// PUT /api/users/me/avatar — replaces the main profile photo.
+export function uploadAvatar(file: File): Promise<User> {
+  return sendPhoto('PUT', '/api/users/me/avatar', file);
+}
+
+// POST /api/users/me/photos — appends one additional photo (max 3).
+export function addPhoto(file: File): Promise<User> {
+  return sendPhoto('POST', '/api/users/me/photos', file);
+}
+
+// DELETE /api/users/me/photos/:index — removes one additional photo by its
+// position in the array.
+export async function removePhoto(index: number): Promise<User> {
+  const res = await fetch(`${API_BASE_URL}/api/users/me/photos/${index}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error((data as ErrorResponse).error || 'Request failed');
+  }
+
+  return (data as UpdateMeResponse).user;
 }
