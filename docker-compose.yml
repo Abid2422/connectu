@@ -29,6 +29,42 @@ services:
       timeout: 5s
       retries: 5
 
+  # S3-compatible substitute for Cloudflare R2, for local dev only — real
+  # deployments should point R2_* env vars at an actual R2 bucket instead.
+  # Same client code talks to both since R2 is S3-compatible.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-connectu}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-connectu123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # One-shot: creates the photos bucket and makes it publicly readable,
+  # matching how the app expects to serve uploaded photos back out.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-connectu} ${MINIO_ROOT_PASSWORD:-connectu123} &&
+      mc mb -p local/${R2_BUCKET_NAME:-connectu-photos} &&
+      mc anonymous set download local/${R2_BUCKET_NAME:-connectu-photos}
+      "
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

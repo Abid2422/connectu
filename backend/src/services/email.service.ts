@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { HttpError } from '../utils/httpError';
 
-const FROM_ADDRESS = process.env.EMAIL_FROM || 'ConnectU <onboarding@resend.dev>';
+const FROM_ADDRESS = process.env.EMAIL_FROM || 'ConnectU <verify@otp.connectu.app>';
 
 let resend: Resend | undefined;
 function getResendClient(): Resend {
