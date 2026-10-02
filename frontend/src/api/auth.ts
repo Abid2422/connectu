@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
 // Mirrors the backend's Prisma User model as returned over JSON — Date
 // fields are serialized to ISO strings, not native Date objects.
@@ -20,7 +20,7 @@ export interface User {
   updatedAt: string;
 }
 
-interface ErrorResponse {
+export interface ErrorResponse {
   error: string;
 }
 

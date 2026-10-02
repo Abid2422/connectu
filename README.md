@@ -62,6 +62,24 @@ connectu/
    npm run dev
    ```
 
+## Seed data (dev only)
+
+`backend/prisma/seed.ts` is a standalone script — not a migration, not
+wired into any app logic — that creates ~18 fake-but-realistic onboarded
+NYU student profiles so the discovery/swipe feed has real candidates to
+test against locally. It's safe to re-run and has nothing to do with
+production data; delete `backend/prisma/seed.ts` if it's ever in the way.
+
+```bash
+cd backend
+npx prisma db seed          # create/update the sample profiles
+npx prisma db seed -- --clear   # remove exactly those sample profiles
+```
+
+`--clear` deletes only the users this script created (matched by their
+`nyuEmail`) — their swipes/matches go with them automatically — and never
+touches accounts created through the real signup flow.
+
 ## Auth (Phase 1)
 
 Signup is restricted to `@nyu.edu` addresses. A user submits their NYU email,

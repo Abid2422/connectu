@@ -10,6 +10,9 @@ const LOOKING_FOR_MAX = 4;
 const BIO_MIN = 20;
 const BIO_MAX = 300;
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SWIPE_DIRECTIONS = ['like', 'pass'];
+
 export const validateSignupRequest: RequestHandler = (req, res, next) => {
   const { nyuEmail } = req.body || {};
 
@@ -80,6 +83,25 @@ export const validateProfileUpdateRequest: RequestHandler = (req, res, next) => 
 
   if (typeof bio !== 'string' || bio.trim().length < BIO_MIN || bio.trim().length > BIO_MAX) {
     return res.status(400).json({ error: `Bio must be between ${BIO_MIN} and ${BIO_MAX} characters.` });
+  }
+
+  return next();
+};
+
+// POST /api/swipes — records a like/pass on another user.
+export const validateSwipeRequest: RequestHandler = (req, res, next) => {
+  const { swipedId, direction } = req.body || {};
+
+  if (typeof swipedId !== 'string' || !UUID_REGEX.test(swipedId)) {
+    return res.status(400).json({ error: 'A valid swipedId is required.' });
+  }
+
+  if (typeof direction !== 'string' || !SWIPE_DIRECTIONS.includes(direction)) {
+    return res.status(400).json({ error: 'direction must be "like" or "pass".' });
+  }
+
+  if (swipedId === req.user!.sub) {
+    return res.status(400).json({ error: 'You cannot swipe on yourself.' });
   }
 
   return next();

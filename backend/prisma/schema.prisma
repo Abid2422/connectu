@@ -24,7 +24,54 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  // Prisma requires both sides of an explicit relation declared, even
+  // though the app only ever queries Swipe/Match directly (never through
+  // these). onDelete: Cascade lives on the Swipe/Match side below.
+  swipesGiven    Swipe[] @relation("SwipesGiven")
+  swipesReceived Swipe[] @relation("SwipesReceived")
+  matchesAsA     Match[] @relation("MatchesAsUserA")
+  matchesAsB     Match[] @relation("MatchesAsUserB")
+
   @@map("users")
+}
+
+enum SwipeDirection {
+  like
+  pass
+}
+
+// One row per (swiper, swiped) pair — the unique constraint is what makes
+// POST /api/swipes idempotent-ish (a repeat swipe on the same person 409s
+// instead of silently recording a second row).
+model Swipe {
+  id        String         @id @default(uuid())
+  swiperId  String
+  swipedId  String
+  direction SwipeDirection
+  createdAt DateTime       @default(now())
+
+  swiper User @relation("SwipesGiven", fields: [swiperId], references: [id], onDelete: Cascade)
+  swiped User @relation("SwipesReceived", fields: [swipedId], references: [id], onDelete: Cascade)
+
+  @@unique([swiperId, swipedId])
+  @@index([swipedId])
+  @@map("swipes")
+}
+
+// userAId/userBId are canonicalized (lower id first) when a match is
+// created, so the unique constraint catches a duplicate regardless of
+// which user's "like" was the one that completed the pair.
+model Match {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  matchedAt DateTime @default(now())
+
+  userA User @relation("MatchesAsUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("MatchesAsUserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@map("matches")
 }
 
 // Tracks OTPs separately from User so old codes can be invalidated on
